@@ -25,6 +25,11 @@ try {
   assert.equal(await frame.evaluate(()=>edits.length),0,'opening must not dirty the document')
   assert.ok(await frame.locator('.geSidebarContainer').first().evaluate(el=>el.clientWidth)>100,'sidebar visible')
   assert.ok(await frame.locator('.geSidebar a').count()>10,'shape palette populated')
+  assert.ok(await frame.evaluate(()=>Object.keys(drawioUi.sidebar.palettes).filter(name=>name.startsWith('bpmn2')).length)>=5,'visible BPMN palettes registered')
+  assert.equal(await frame.evaluate(()=>{
+    mxStencilRegistry.loadStencilSet('stencils/bpmn.xml')
+    return Object.keys(mxStencilRegistry.stencils).some(name=>name.startsWith('mxgraph.bpmn.'))
+  }),true,'retained classic BPMN stencils load for existing diagrams')
   assert.deepEqual(await frame.evaluate(()=>['mermaid','plantUml','importVisio','generate'].filter(name=>{
     const action=drawioUi.actions.get(name);return action?.isEnabled() || action?.isVisible?.()
   })),[],'unsupported actions must be hidden and disabled')

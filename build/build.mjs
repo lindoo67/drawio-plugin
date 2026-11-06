@@ -16,7 +16,21 @@ const asset = p => {
   if (!mime[extname(p)] || !existsSync(resolve(web, p))) return null
   return `data:${mime[extname(p)]};base64,${readFileSync(resolve(web,p)).toString('base64')}`
 }
-let js = ['js/app.min.js','js/shapes-14-6-5.min.js','js/stencils.min.js'].map(read).join('\n;\n')
+// The sidebar only exposes general, UML, ER, BPMN, flowchart, basic and arrows.
+// All except classic BPMN are implemented by app.min.js/shapes-14-6-5.min.js.
+// Keep the stencil decoder, but discard the hundreds of hidden cloud, network,
+// electrical and mockup libraries bundled in upstream stencils.min.js.
+const offlineStencils = new Set(['bpmn.xml'])
+let stencils = read('js/stencils.min.js')
+const stencilAssignment = /f\['([^']+)'\] = '[^']*';\n?/g
+const bundledStencils = new Set([...stencils.matchAll(stencilAssignment)].map(match => match[1]))
+for (const name of offlineStencils) {
+  if (!bundledStencils.has(name)) throw Error(`Missing required offline stencil: ${name}`)
+}
+stencils = stencils.replace(stencilAssignment, (source, name) => offlineStencils.has(name) ? source : '')
+const retainedStencils = [...stencils.matchAll(stencilAssignment)].map(match => match[1])
+if (retainedStencils.length !== offlineStencils.size) throw Error('Unexpected offline stencil set: ' + retainedStencils.join(', '))
+let js = [read('js/app.min.js'),read('js/shapes-14-6-5.min.js'),stencils].join('\n;\n')
 // Upstream uses relative image names in constructors and CSS. Embed those assets.
 js = js.replace(/(['"])((?:images|img|mxgraph\/images)\/[^'"\s]+)\1/g, (all,q,p) => asset(p) ? q + asset(p) + q : all)
 new vm.Script(js)
