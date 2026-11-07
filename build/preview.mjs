@@ -1,7 +1,7 @@
 // Render genuine editor previews; also export generated raster art to marketplace sizes.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { resolve } from 'node:path'
+import { resolve, extname } from 'node:path'
 const require=createRequire(resolve(process.env.ORCA_DIR || '/data/LinDoo/orca','package.json'))
 const {chromium}=require('playwright')
 const root=resolve(import.meta.dirname,'..')
@@ -21,12 +21,18 @@ try {
     },{source:'data:image/png;base64,'+readFileSync(input).toString('base64'),width,height,type,quality})
     writeFileSync(resolve(root,'images',output),Buffer.from(data,'base64'))
   }
-  const html=readFileSync(resolve(root,'editor/index.html'),'utf8')
+  const editorRoot=new URL('../editor/',import.meta.url)
+  const html=readFileSync(new URL('index.html',editorRoot),'utf8')
   const template=readFileSync(resolve(root,'templates/empty.drawio'),'utf8')
-  const prelude=`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'"><script>
+  const prelude=`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src data:; base-uri 'none'; form-action 'none'"><script>
   window.current={version:1,readOnly:false,content:{kind:'text',text:${JSON.stringify(template)}}};window.orca={document:{onDidChange(fn){window.receive=fn;fn(current)},async applyEdit(edit){current={...current,version:current.version+1,content:edit.content};receive(current)}},on(name,fn){window.flush=fn}};</script>`
-  await page.setContent('<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0}</style><iframe sandbox="allow-scripts"></iframe>')
-  await page.locator('iframe').evaluate((el,html)=>el.srcdoc=html,prelude+html)
+  await page.route('https://plugin.test/**',route=>{
+    const path=new URL(route.request().url()).pathname.slice(1)||'index.html'
+    const body=path==='index.html'?Buffer.from(prelude+html):readFileSync(new URL(path,editorRoot))
+    const type={'.html':'text/html','.js':'text/javascript','.css':'text/css','.bin':'application/octet-stream','.svg':'image/svg+xml'}[extname(path)]||'application/octet-stream'
+    return route.fulfill({status:200,contentType:type,body})
+  })
+  await page.setContent('<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0}</style><iframe sandbox="allow-scripts allow-same-origin" src="https://plugin.test/index.html"></iframe>')
   const frame=page.frames()[1]
   await frame.waitForFunction(()=>document.getElementById('message')?.hidden,null,{timeout:30000})
   await frame.evaluate(async()=>{

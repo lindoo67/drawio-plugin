@@ -1,6 +1,6 @@
 # Draw.io for Orca
 
-在 Orca 编辑器内离线编辑 `.drawio`、`.drawio.xml` 文件。采用 draw.io 的真实编辑器，不需要打开在线 diagrams.net，也不会把图表发送到远程服务。集成方式参考官方 Excalidraw 插件的 `sandboxed-ui` / `customEditors` 文档接口，未复制官方插件源码。
+在 Orca 桌面版编辑器内离线编辑 `.drawio`、`.drawio.xml` 文件。采用 draw.io 的真实编辑器，不需要打开在线 diagrams.net，也不会把图表发送到远程服务。集成方式使用官方 `sandboxed-ui` / `customEditors` 隔离帧接口，未复制官方插件源码。
 
 ![Draw.io 插件封面插画](images/cover.webp)
 
@@ -22,7 +22,7 @@
 
 ## 当前范围
 
-这是离线 XML 编辑器。云端存储、在线搜索、AI、远程图片/字体、第三方插件、MathJax、Mermaid/Visio 导入以及依赖额外脚本的布局不在本版本范围内。初始界面提供上述矢量库；上游「更多图形」中的远程图片库不保证可用。需要图片时请使用包含 data URI 的图表。PNG/SVG 中嵌入图表的二进制文件不注册为编辑器类型，普通 `.xml` 文件也不会被接管。
+这是 Orca 桌面版的离线 XML 编辑器。由于大型 draw.io 库使用 `frame: isolated`，浏览器客户端会回退到 Source。云端存储、在线搜索、AI、远程图片/字体、第三方插件、MathJax、Mermaid/Visio 导入以及依赖额外脚本的布局不在本版本范围内。初始界面提供上述矢量库；上游「更多图形」中的远程图片库不保证可用。需要图片时请使用包含 data URI 的图表。PNG/SVG 中嵌入图表的二进制文件不注册为编辑器类型，普通 `.xml` 文件也不会被接管。
 
 为避免恶意或异常文件冻结编辑器，单个文件或解压后的页面上限为 16 MB，压缩数据上限为 8 MB；同时最多加载 100 页及 100,000 个 XML 元素。
 
@@ -30,7 +30,7 @@
 
 ## 构建与验证
 
-运行需要 Node.js 22+，编辑器运行需要支持 `DecompressionStream` 的 Orca Chromium。构建完全使用 Node 内置模块，产物已包含在 `editor/index.html`，安装后无需 npm 或联网。
+构建需要 Node.js 22+。编辑器运行在 Orca 桌面版的隔离 Chromium frame 中；构建完全使用 Node 内置模块，产物位于 `editor/`，安装后无需 npm 或联网。
 
 ```sh
 git clone --filter=blob:none --no-checkout https://github.com/jgraph/drawio.git /tmp/orca-drawio-upstream
@@ -40,9 +40,9 @@ ORCA_DIR=/data/LinDoo/orca node plugins/drawio/build/tests/editor.test.mjs
 node /data/LinDoo/orca/config/scripts/validate-plugin-files.mjs plugins/drawio
 ```
 
-构建脚本核对上游固定提交；将编辑器、形状、stencil、中文资源、样式和静态 UI 图片嵌入一个 gzip/base64 载荷，运行时解压并作为内联脚本执行，遵守 Orca 禁网且禁止 `eval` 的 CSP。入口大小不得超过 10 MiB。源码在 `build/src/`，请修改源码后重新构建，勿直接修改生成的 HTML。
+构建脚本核对上游固定提交；将编辑器核心、形状、精简 stencil、中文资源、样式、启动代码和文档桥接代码输出为独立文件。隔离帧只通过插件目录内的相对 URL 加载脚本与资源，不使用 Blob 脚本或外部网络。入口 HTML 保持很小；源码在 `build/src/`，请修改源码后重新构建，勿直接修改 `editor/` 产物。
 
-浏览器测试使用 `ORCA_DIR` 中已安装的 Playwright，需要已安装 Chromium（`playwright install chromium`）。测试运行在 `sandbox="allow-scripts"` 的不透明 origin 下，并使用 Orca 相同的 CSP，覆盖干净打开、形状编辑、保存刷新、撤销重做、背景配置、压缩多页、自定义属性、冲突重试、只读、无效 XML 和主题，断言没有网络请求。测试用文档宿主替身模拟 Orca 接口；真实 Orca 中的安装与快捷键还需手动验收。
+浏览器测试使用 `ORCA_DIR` 中已安装的 Playwright，需要已安装 Chromium（`playwright install chromium`）。测试运行在与 Orca 隔离帧相同的独立 origin 和 CSP 下，覆盖本地多文件加载、干净打开、形状编辑、保存刷新、撤销重做、背景配置、压缩多页、自定义属性、冲突重试、只读、无效 XML 和主题，并断言没有外部网络请求。测试用文档宿主替身模拟 Orca 接口；真实 Orca 中的安装与快捷键还需手动验收。
 
 ## 发布状态
 
