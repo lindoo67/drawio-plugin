@@ -12,7 +12,7 @@
 
 在 Orca 的插件管理中添加本目录作为本地开发插件（需要通过 manifest 校验）。通过新建文件菜单选择「新建 Draw.io 图表」，或打开已有 `.drawio` 文件。编辑器页用于绘图，Source 页可以检查和修改 XML。
 
-- 中文菜单、形状拖放、连线、文本、样式和图层。
+- 多语言界面（英语、简体/繁体中文、德语、法语、西班牙语、意大利语、日语、韩语、荷兰语、波兰语、葡萄牙语（含巴西）、俄语、土耳其语），按 Orca 的系统语言自动选择，没有对应语言时使用英语；形状拖放、连线、文本、样式和图层。
 - 常用矢量图形库：通用、UML、ER、BPMN、流程图、基础形状和箭头。
 - 多页图表，支持压缩和未压缩的 draw.io XML，保留自定义 mxfile 属性。
 - 撤销与重做、缩放、网格、背景颜色和页面设置。
@@ -37,10 +37,11 @@ git clone --filter=blob:none --no-checkout https://github.com/jgraph/drawio.git 
 git -C /tmp/orca-drawio-upstream checkout 84487b4891cbc0f32d7e30f34cf878c87cb1f414
 DRAWIO_DIR=/tmp/orca-drawio-upstream node plugins/drawio/build/build.mjs
 ORCA_DIR=/data/LinDoo/orca node plugins/drawio/build/tests/editor.test.mjs
+ORCA_DIR=/data/LinDoo/orca node plugins/drawio/build/tests/language.test.mjs
 node /data/LinDoo/orca/config/scripts/validate-plugin-files.mjs plugins/drawio
 ```
 
-构建脚本核对上游固定提交；将编辑器核心、形状、精简 stencil、中文资源、样式、启动代码和文档桥接代码输出为独立文件。隔离帧只通过插件目录内的相对 URL 加载脚本与资源，不使用 Blob 脚本或外部网络。入口 HTML 保持很小；源码在 `build/src/`，请修改源码后重新构建，勿直接修改 `editor/` 产物。
+构建脚本核对上游固定提交；将编辑器核心、形状、精简 stencil、多语言资源、样式、启动代码和文档桥接代码输出为独立文件。隔离帧只通过插件目录内的相对 URL 加载脚本与资源，不使用 Blob 脚本或外部网络。入口 HTML 保持很小；源码在 `build/src/`，请修改源码后重新构建，勿直接修改 `editor/` 产物。
 
 浏览器测试使用 `ORCA_DIR` 中已安装的 Playwright，需要已安装 Chromium（`playwright install chromium`）。测试运行在与 Orca 隔离帧相同的独立 origin 和 CSP 下，覆盖本地多文件加载、干净打开、形状编辑、保存刷新、撤销重做、背景配置、压缩多页、自定义属性、冲突重试、只读、无效 XML 和主题，并断言没有外部网络请求。测试用文档宿主替身模拟 Orca 接口；真实 Orca 中的安装与快捷键还需手动验收。
 
