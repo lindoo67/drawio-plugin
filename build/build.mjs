@@ -34,7 +34,9 @@ const shapes = read('js/shapes-14-6-5.min.js')
 // Upstream uses relative image names in constructors and CSS. Embed those assets.
 app = app.replace(/(['"])((?:images|img|mxgraph\/images)\/[^'"\s]+)\1/g, (all,q,p) => asset(p) ? q + asset(p) + q : all)
 new vm.Script([app,shapes,stencils].join('\n;\n'))
-const resources = Object.fromEntries(['resources/dia.txt','resources/dia_zh.txt','styles/default.xml','styles/dark-default.xml'].map(p => [p,read(p)]))
+// Keep in sync with `languages` in src/bootstrap.js. English is the base bundle (dia.txt).
+const languages = ['de','es','fr','it','ja','ko','nl','pl','pt','pt-br','ru','tr','zh','zh-tw']
+const resources = Object.fromEntries(['resources/dia.txt',...languages.map(l => `resources/dia_${l}.txt`),'styles/default.xml','styles/dark-default.xml'].map(p => [p,read(p)]))
 let css = ['styles/grapheditor.css','mxgraph/css/common.css'].map(p => read(p).replace(/url\(['"]?([^)'"\s]+)['"]?\)/g, (all,path) => {
   const a = asset(resolve(web,dirname(p),path).slice(web.length+1))
   return a ? `url("${a}")` : all
