@@ -35,7 +35,11 @@
       }
     ]
   },
-  "capabilities": [],
+  "capabilities": [
+    {
+      "kind": "storage:own"
+    }
+  ],
   "icon": "images/icon.png",
   "cover": {
     "path": "images/cover.webp",

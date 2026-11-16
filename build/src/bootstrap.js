@@ -4,8 +4,8 @@ window.mxLoadResources = false;
 window.mxLoadStylesheets = false;
 // Keep in sync with `languages` in build.mjs. English is the base bundle.
 const bundledLanguages = ['de','es','fr','it','ja','ko','nl','pl','pt','pt-br','ru','tr','zh','zh-tw'];
-const pickLanguage = () => {
-  for (const tag of navigator.languages?.length ? navigator.languages : [navigator.language]) {
+const pickLanguage = tags => {
+  for (const tag of tags) {
     const [primary, ...rest] = String(tag).toLowerCase().split('-');
     if (primary === 'en') return 'en';
     if (primary === 'zh') return rest.some(part => ['tw','hk','mo','hant'].includes(part)) ? 'zh-tw' : 'zh';
@@ -16,8 +16,22 @@ const pickLanguage = () => {
   }
   return 'en';
 };
-window.mxLanguage = pickLanguage();
-window.urlParams.lang = window.mxLanguage;
+const browserLanguages = navigator.languages?.length ? navigator.languages : [navigator.language];
+const useLanguage = language => {
+  window.mxLanguage = language;
+  window.urlParams.lang = language;
+};
+useLanguage(pickLanguage(browserLanguages));
+window.drawioHostLanguage = window.mxLanguage;
+window.drawioLanguageOverride = null;
+window.drawioLanguageReady = (async () => {
+  let stored = null;
+  try { stored = await window.orca?.storage?.get('ui-language'); } catch {}
+  // Reading storage waits for the frame handshake that supplies Orca's UI locale.
+  window.drawioHostLanguage = pickLanguage(window.orca?.locale ? [window.orca.locale] : browserLanguages);
+  window.drawioLanguageOverride = ['en',...bundledLanguages].includes(stored) ? stored : null;
+  useLanguage(window.drawioLanguageOverride || window.drawioHostLanguage);
+})();
 window.mxLanguages = bundledLanguages;
 window.mxIsElectron = false;
 window.isLocalStorage = false;
