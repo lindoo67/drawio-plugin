@@ -1,3 +1,4 @@
+window.drawioLanguageReady.then(() => {
 mxResources.parse(drawioResources['resources/dia.txt']);
 const localized = drawioResources[`resources/dia_${mxLanguage}.txt`];
 if (localized) mxResources.parse(localized);
@@ -239,8 +240,46 @@ ui.editor.addListener('change',changed);
 ui.editor.graph.model.addListener(mxEvent.CHANGE,changed);
 for (const event of ['gridSizeChanged','shadowVisibleChanged']) ui.editor.graph.addListener(event,changed);
 for (const event of ['pageFormatChanged','pageScaleChanged','backgroundColorChanged','backgroundImageChanged','foldingEnabledChanged','mathEnabledChanged','gridEnabledChanged','guidesEnabledChanged','tooltipsEnabledChanged','pageViewChanged','connectionPointsChanged','connectionArrowsChanged']) ui.addListener(event,changed);
+const languageNames = {
+  en:'English',de:'Deutsch',es:'Español',fr:'Français',it:'Italiano',ja:'日本語',ko:'한국어',
+  nl:'Nederlands',pl:'Polski',pt:'Português (Portugal)','pt-br':'Português (Brasil)',
+  ru:'Русский',tr:'Türkçe',zh:'简体中文','zh-tw':'繁體中文'
+};
+const applyLanguage = (language, override) => {
+  window.drawioLanguageOverride = override;
+  window.mxLanguage = language;
+  window.urlParams.lang = language;
+  mxClient.language = language;
+  mxResources.resources = {};
+  mxResources.parse(drawioResources['resources/dia.txt']);
+  const bundle = drawioResources[`resources/dia_${language}.txt`];
+  if (bundle) mxResources.parse(bundle);
+  ui.fireEvent(new mxEventObject('languageChanged'));
+};
+const chooseLanguage = async language => {
+  try {
+    if (language == null) {
+      await window.orca.storage.delete('ui-language');
+      applyLanguage(window.drawioHostLanguage, null);
+    } else {
+      await window.orca.storage.set('ui-language', language);
+      applyLanguage(language, language);
+    }
+  } catch(error) { ui.handleError(error); }
+};
+ui.menus.put('language',new Menu((menu,parent) => {
+  const addLanguage = (label,language,selected) => {
+    const item=menu.addItem(label,null,()=>{ void chooseLanguage(language); },parent);
+    if (selected) menu.addCheckmark(item,Editor.checkmarkImage);
+  };
+  addLanguage(`Orca — ${languageNames[window.drawioHostLanguage]}`,null,window.drawioLanguageOverride==null);
+  menu.addSeparator(parent);
+  for (const [language,label] of Object.entries(languageNames)) {
+    addLanguage(label,language,window.drawioLanguageOverride===language);
+  }
+}));
 // File operations belong to Orca; keep editing menus and local diagram tools.
-ui.menus.defaultMenuItems = ['edit','view','arrange','extras'];
+ui.menus.defaultMenuItems = ['edit','view','arrange','extras','language'];
 ui.menubar.container.replaceChildren();
 ui.menubar = ui.menus.createMenubar(ui.menubar.container);
 for (const name of ['save','saveAs','new','open','export','print']) {
@@ -298,3 +337,4 @@ window.orca.document.onDidChange(doc => {
   finally { loading=false; }
 });
 window.orca.on('editor.flush',flush);
+});
