@@ -44,16 +44,20 @@ try {
       text:event.clipboardData.getData('text/plain')
     }))
   })
-  const copyFromEditMenu=async label=>{
-    await frame.locator('.geMenubarContainer').getByText('编辑',{exact:true}).click()
+  const copyFromEditMenu=async action=>{
+    const {menu,label}=await frame.evaluate(action=>({
+      menu:mxResources.get('edit'),
+      label:mxResources.get(action)
+    }),action)
+    await frame.locator('.geMenubarContainer').getByText(menu,{exact:true}).click()
     const item=frame.getByText(label,{exact:true}).last()
     await item.click({timeout:3000})
   }
-  await copyFromEditMenu('复制为 SVG')
+  await copyFromEditMenu('copyAsSvg')
   await frame.waitForFunction(()=>copied.length===1,null,{timeout:3000})
   assert.match(await frame.evaluate(()=>copied[0].html),/^<img src="data:image\/svg\+xml/)
   assert.match(await frame.evaluate(()=>copied[0].text),/^<svg\b/)
-  await copyFromEditMenu('复制为图像')
+  await copyFromEditMenu('copyAsImage')
   await frame.waitForFunction(()=>copied.length===2,null,{timeout:3000})
   assert.match(await frame.evaluate(()=>copied[1].html),/^<img src="data:image\/png/)
   console.log('PASS: Edit > Copy as Image/SVG uses the isolated-frame clipboard fallback')

@@ -1,5 +1,6 @@
 mxResources.parse(drawioResources['resources/dia.txt']);
-mxResources.parse(drawioResources['resources/dia_zh.txt']);
+const localized = drawioResources[`resources/dia_${mxLanguage}.txt`];
+if (localized) mxResources.parse(localized);
 const resource = url => drawioResources[url.split('?')[0]];
 const request = url => {
   const text = resource(url);

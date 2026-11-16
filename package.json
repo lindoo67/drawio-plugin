@@ -11,9 +11,9 @@
     "build": "node build/build.mjs",
     "check": "npm run check:syntax && npm run check:plugin",
     "check:plugin": "node build/tests/plugin.test.mjs",
-    "check:syntax": "node --check build/build.mjs && node --check build/preview.mjs && node --check build/src/bootstrap.js && node --check build/src/editor.js && node --check build/tests/clipboard.electron.test.cjs && node --check build/tests/clipboard.test.mjs && node --check build/tests/editor.test.mjs && node --check build/tests/plugin.test.mjs",
+    "check:syntax": "node --check build/build.mjs && node --check build/preview.mjs && node --check build/src/bootstrap.js && node --check build/src/editor.js && node --check build/tests/clipboard.electron.test.cjs && node --check build/tests/clipboard.test.mjs && node --check build/tests/editor.test.mjs && node --check build/tests/language.test.mjs && node --check build/tests/plugin.test.mjs",
     "test": "npm run test:browser",
-    "test:browser": "node build/tests/editor.test.mjs && node build/tests/clipboard.test.mjs",
+    "test:browser": "node build/tests/editor.test.mjs && node build/tests/language.test.mjs && node build/tests/clipboard.test.mjs",
     "test:electron": "electron build/tests/clipboard.electron.test.cjs --no-sandbox"
   },
   "devDependencies": {
