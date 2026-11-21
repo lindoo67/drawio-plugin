@@ -1,6 +1,6 @@
 {
   "name": "@lindoo67/drawio-plugin",
-  "version": "0.1.6",
+  "version": "0.1.9",
   "private": true,
   "description": "Offline Draw.io custom editor for Orca",
   "license": "Apache-2.0",

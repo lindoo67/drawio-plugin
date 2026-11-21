@@ -3,7 +3,7 @@
   "id": "drawio",
   "publisher": "lindoo67",
   "name": "Draw.io",
-  "version": "0.1.6",
+  "version": "0.1.9",
   "execution": "sandboxed-ui",
   "description": "Create and edit draw.io flowcharts, architecture diagrams, and multi-page diagrams entirely offline in Orca, with an infinite canvas, collapsible sidebar, popular vector shape libraries, undo and redo, automatic synchronization, and high-resolution PNG and SVG clipboard copying.",
   "license": "Apache-2.0",
